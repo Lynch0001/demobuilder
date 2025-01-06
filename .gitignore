@@ -1,3 +1,16 @@
 .venv
 
-.idea
+
+# User-specific stuff:
+.idea/*
+
+## File-based project format:
+*.iws
+
+## Plugin-specific files:
+
+# IntelliJ
+/out/
+
+# *.iml
+# modules.xml

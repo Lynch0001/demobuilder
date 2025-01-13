@@ -12,5 +12,8 @@
 # IntelliJ
 /out/
 
+files
+files/git_id_ed25519*
+
 # *.iml
 # modules.xml

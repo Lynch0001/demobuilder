@@ -6,6 +6,10 @@ body {
   text-align: center;
 }
 
+.btn-sm {
+  padding: 10px;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -40,4 +44,3 @@ body {
     transform: rotate(360deg);
   }
 }
-

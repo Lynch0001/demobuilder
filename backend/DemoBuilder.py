@@ -1,8 +1,13 @@
+import os
+import git
+import glob
+import subprocess
 import json
 import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from datetime import datetime, date
+from BuildProject import build_project, run_command, update_branch_counter, execute_bash_script
 
 from db_config import get_db_connection
 
@@ -11,6 +16,28 @@ logging.basicConfig(level=logging.DEBUG)
 DemoBuilder = Flask(__name__)
 
 CORS(DemoBuilder)
+
+# Configuration for the repositories
+REPOSITORIES = [
+    {
+        "name": "boilerplate-helm-charts",
+        "repo_url": "git@github.com:Lynch0001/boilerplate-helm-charts.git",
+        "base_branch": "main",
+        "search_path": "boilerplate-helm-charts/archiver/values/demo/*",
+        "script": "/app/boilerplate-helm-charts/buildDemoProject.sh",
+        "repo_path": "boilerplate-helm-charts"
+    },
+    {
+        "name": "boilerplate-infra-live",
+        "repo_url": "git@github.com:Lynch0001/boilerplate-infra-live.git",
+        "base_branch": "main",
+        "search_path": "boilerplate-infra-live/prod/us-east-1/xib/xib-demo/*",
+        "script": "/app/boilerplate-infra-live/buildInfraDemoProject.sh",
+        "repo_path": "boilerplate-infra-live"
+    },
+]
+
+
 
 @DemoBuilder.route('/add-requester-user', methods=['POST'])
 @cross_origin(origins='*',allow_headers=['Content-Type','Authorization'])
@@ -117,7 +144,7 @@ def delete_admin_user(id):
 @cross_origin(origins='*',allow_headers=['Content-Type','Authorization'])
 def add_project_request():
     data = request.json
-    print(data)
+    logging.debug(data)
     date_format = '%Y-%m-%d'
     segment = data.get('selected_segment')
     requestor = data.get('requestor')
@@ -141,7 +168,7 @@ def add_project_request():
     mq_flag = data.get('mq_flag')
     inbound_sftp_pw = data.get('producer_sftp_pw')
     inbound_sftp_key = data.get('producer_sftp_key')
-    print(data)
+    logging.debug(data)
     if not (segment and requestor and start_date and end_date ):
         return jsonify({"error": "Invalid input"}), 400
     current_date = datetime.now()
@@ -202,7 +229,7 @@ def approve_project_request(id):
     # Get data from requested project
     try:
         data = get_project_request(id)
-        if data is not None: print("retrieved project request")
+        if data is not None: logging.debug("retrieved project request")
     except Exception as e:
         return jsonify({"error fetching request data": str(e)}), 500
 
@@ -219,32 +246,56 @@ def approve_project_request(id):
     current_date = datetime.now()
     approver = "CN=Doe, Jane"
     deployed = False
-    print(f"adding project {project} to active list")
+    logging.debug(f"adding project {project} to active list")
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    "INSERT INTO active_project (project, segment, requestor, approver, request_date, approved_date, start_date, end_date, deployed) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (project, segment, requestor, approver, request_date, current_date, start_date, end_date, deployed)
+                    "UPDATE requested_project SET approver = %s, approved_date = %s WHERE id = %s",
+                    (approver, datetime.now(), id)
                 )
-            #return jsonify({"message": "Data successfully stored"}), 201
+            return jsonify({"message": "Data successfully stored"}), 201
     except Exception as e:
         return jsonify({"error writing active project data": str(e)}), 500
-
-    # update active project list
-    try:
-        update_unused_project(project, True)
-    except Exception as e:
-        return jsonify({"error writing active project data": str(e)}), 500
-
 
 ##############################################################################
 
 
+@DemoBuilder.route('/build-project-request/<int:id>', methods=['GET'])
+@cross_origin(origins='*',allow_headers=['Content-Type','Authorization'])
+def build_project_request(id):
+    # Get project_request
+    logging.debug("building project request")
+    try:
+        project_request = get_project_request(id)
+        if project_request is not None: logging.debug("retrieved project request")
+    except Exception as e:
+        return jsonify({"error fetching request data": str(e)}), 500
+
+    if project_request[4] is not None:
+        logging.debug("Verified project request is approved")
+    else:
+        logging.debug("Project request must be approved before building")
+
+    # get project name
+    project_name = find_unused_project()
+
+    # build project (MANUAL OR CHRON)
+    try:
+        success = build_project(project_name, project_request, REPOSITORIES)
+        if success:
+            update_unused_project(project_name, True)
+            return jsonify({"message": f"Successfully built project: {project_name}"}), 201
+    except Exception as e:
+        return jsonify({"error building project request": str(e)}), 500
+    
+##############################################################################
+##############################################################################
+
 def deploy_project(id):
 
     # deploy project (MANUAL OR CHRON)
-    print("deploying project request")
+    logging.debug("deploying project request")
 
     # update deployed status in active projects
     deployed = True
@@ -256,7 +307,7 @@ def deploy_project(id):
     # delete project request
     try:
         delete_project_request(id)
-        print("deleted project request")
+        logging.debug("deleted project request")
         return jsonify({"message": "Data successfully stored"}), 201
     except Exception as e:
         return jsonify({"error deleting request data": str(e)}), 500
@@ -265,9 +316,16 @@ def deploy_project(id):
 
 def destroy_project(id):
 
-    print("destroying active project")
-
+    logging.debug("destroying active project")
+    
+    
 ##############################################################################
+##############################################################################
+
+
+
+
+
 @DemoBuilder.route('/add-active-project', methods=['POST'])
 @cross_origin(origins='*',allow_headers=['Content-Type','Authorization'])
 def add_active_project(project):
@@ -322,10 +380,10 @@ def delete_active_project_(id):
     # get project name from active projects
     try:
         project = get_active_project(id)
-        print(project)
+        logging.debug(project)
         project_name = project[1]
-        print(project_name)
-        if project is not None: print("retrieved active project")
+        logging.debug(project_name)
+        if project is not None: logging.debug("retrieved active project")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     # archive project
@@ -384,8 +442,8 @@ def get_segments():
             with conn.cursor() as cur:
                 cur.execute("SELECT name FROM segment")
                 segments = [''.join(tup) for tup in cur.fetchall()]
-                #print(segments)
-               # if segments != null: print("fetched segments successfully")
+                #logging.debug(segments)
+               # if segments != null: logging.debug("fetched segments successfully")
         return segments
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -437,10 +495,10 @@ def delete_segment(id):
 
 def add_archive_project(project): # project is a tuple
     date_format = '%Y-%m-%d'
-    print(type(project[5]))
-    print(project[5].strftime('%Y-%m-%d'))
+    logging.debug(type(project[5]))
+    logging.debug(project[5].strftime('%Y-%m-%d'))
     project_name = project[1]
-    print(project[5].strftime('%Y-%m-%d'))
+    logging.debug(project[5].strftime('%Y-%m-%d'))
     segment = project[2]
     requestor = project[3]
     approver = project[4]
@@ -499,7 +557,7 @@ def update_unused_project(project, used):
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute("UPDATE project_used SET used = %s WHERE project = %s", (used, project))
-        print("projects used table updated successfully")
+        logging.debug("projects used table updated successfully")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -510,11 +568,13 @@ def update_project_deployed(project, deployed):
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute("UPDATE active_project SET deployed = %s WHERE project = %s", (deployed, project))
-        print("projects deployment state updated successfully")
+        logging.debug("projects deployment state updated successfully")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # venv env vars set in site-packages/_virtualenv.py
 
 if __name__ == '__main__':
-    DemoBuilder.run(debug=True)
+    run_command(f"git config --global user.name \"Builder\"")
+    run_command(f"git config --global user.email \"xib-dev@bah.com\"")
+    DemoBuilder.run(host="0.0.0.0", port=5001)

@@ -1,16 +1,16 @@
-DROP TABLE public.active_project ;
+DROP TABLE IF EXISTS public.active_project ;
 
-DROP TABLE public.admin_user ;
+DROP TABLE IF EXISTS public.admin_user ;
 
-DROP TABLE public.archive_project ;
+DROP TABLE IF EXISTS public.archive_project ;
 
-DROP TABLE public.project_used ;
+DROP TABLE IF EXISTS public.project_used ;
 
-DROP TABLE public.requested_project ;
+DROP TABLE IF EXISTS public.requested_project ;
 
-DROP TABLE public.requestor_user ;
+DROP TABLE IF EXISTS public.requestor_user ;
 
-DROP TABLE public.segment ;
+DROP TABLE IF EXISTS public.segment ;
 
 
 CREATE TABLE IF NOT EXISTS "active_project" (
@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS "requested_project" (
 	"segment" varchar(255) NOT NULL,
 	"requestor" varchar(255) NOT NULL,
 	"request_date" date NOT NULL,
+    "approver" varchar(40),
+    "approved_date" date,
 	"start_date" date NOT NULL,
 	"end_date" date NOT NULL,
 	"mq1_host" varchar(40),

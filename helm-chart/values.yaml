@@ -1,0 +1,35 @@
+replicaCount: 2
+
+image:
+  repository: docker.io/demobuilder
+  tag: 1.0
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: builder.someplace.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+database:
+  name: demobuilder
+  user: user
+  password: password
+  host: db.something.com
+  port: 5432
+
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

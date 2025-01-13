@@ -1,0 +1,23 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY backend/requirements.txt .
+
+RUN pip install --no-cache-dir -r ./requirements.txt
+
+RUN apt-get update && apt-get install -y git
+
+COPY files/boilerplate_linux_amd64 ./boilerplate_linux_amd64
+
+COPY --chmod=400 files/git_id_ed25519 ../root/.ssh/id_ed25519
+
+COPY --chmod=400 files/git_id_ed25519.pub ../root/.ssh/id_ed25519.pub
+
+COPY --chmod=600 files/known_hosts ../root/.ssh/
+
+COPY backend/ .
+
+EXPOSE 5001
+
+CMD ["python", "DemoBuilder.py"]

@@ -41,6 +41,7 @@ function DemoBuilder() {
                         <NavDropdown.Item href="/list-project-request">List Project Requests</NavDropdown.Item>
                         <NavDropdown.Item href="/delete-project-request">Delete Project Request</NavDropdown.Item>
                         <NavDropdown.Item href="/approve-project-request">Approve Project Requests</NavDropdown.Item>
+                         <NavDropdown.Item href="/build-project-request">Build Project Requests</NavDropdown.Item>
                      </NavDropdown>
                      <NavDropdown title="Active Projects" id="nav-dropdown">
                         <NavDropdown.Item href="/add-active-project">Add Active Project</NavDropdown.Item>
@@ -69,6 +70,7 @@ function DemoBuilder() {
                     <Route path="/list-project-request" element={<ListProjectRequestPage />} />
                     <Route path="/delete-project-request" element={<DeleteProjectRequestPage />} />
                     <Route path="/approve-project-request" element={<ApproveProjectRequestPage />} />
+                    <Route path="/build-project-request" element={<BuildProjectRequestPage />} />
                     <Route path="/add-active-project" element={<AddActiveProjectPage />} />
                     <Route path="/list-active-projects" element={<ListActiveProjectsPage />} />
                     <Route path="/delete-active-project" element={<DeleteActiveProjectPage />} />
@@ -104,7 +106,7 @@ function AddRequesterUserPage() {
     const handleAddRequesterUser = async (e) => {
         e.preventDefault();
         try {
-            const result = await axios.post('http://127.0.0.1:5000/add-requester-user', {
+            const result = await axios.post('http://127.0.0.1:5001/add-requester-user', {
                 segment,
                 name_first,
                 name_last,
@@ -157,7 +159,7 @@ function ListRequesterUserPage() {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:5000/list-requester-user'
+        axios.get('http://127.0.0.1:5001/list-requester-user'
         ).then((response) => {
             setData(response.data);
         });
@@ -200,7 +202,7 @@ function DeleteRequesterUserPage() {
     const [data, setData] = useState([]);
 
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/list-requester-user').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-requester-user').then((response) => {
             setData(response.data);
         });
     };
@@ -208,7 +210,7 @@ function DeleteRequesterUserPage() {
     useEffect(fetchData, []);
 
     const handleDelete = (id) => {
-        axios.delete(`http://127.0.0.1:5000/delete-requester-user/${id}`).then(() => {
+        axios.delete(`http://127.0.0.1:5001/delete-requester-user/${id}`).then(() => {
             fetchData();
         });
     };
@@ -263,7 +265,7 @@ function AddAdminUserPage() {
     const handleAddAdminUser = async (e) => {
         e.preventDefault();
         try {
-            const result = await axios.post('http://127.0.0.1:5000/add-admin-user', {
+            const result = await axios.post('http://127.0.0.1:5001/add-admin-user', {
                 segment,
                 name_first,
                 name_last,
@@ -313,7 +315,7 @@ function ListAdminUserPage() {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:5000/list-admin-user').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-admin-user').then((response) => {
             setData(response.data);
         });
     }, []);
@@ -354,7 +356,7 @@ function DeleteAdminUserPage() {
     const [data, setData] = useState([]);
 
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/list-admin-user').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-admin-user').then((response) => {
             setData(response.data);
         });
     };
@@ -362,7 +364,7 @@ function DeleteAdminUserPage() {
     useEffect(fetchData, []);
 
     const handleDelete = (id) => {
-        axios.delete(`http://127.0.0.1:5000/delete-admin-user/${id}`).then(() => {
+        axios.delete(`http://127.0.0.1:5001/delete-admin-user/${id}`).then(() => {
             fetchData();
         });
     };
@@ -422,12 +424,12 @@ function AddProjectRequestPage() {
     const [data, setData] = useState([]);
 
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/get-segments').then((response) => {
+        axios.get('http://127.0.0.1:5001/get-segments').then((response) => {
             setData(Array.from(response.data));
         });
     };
-
-    useEffect(fetchData, []);    
+    
+    useEffect(fetchData, []);
     
     const handleSelectSegment = (event) => {
         setSelectedSegment(event.target.value);
@@ -436,7 +438,7 @@ function AddProjectRequestPage() {
     const handleAddProjectRequest = async (e) => {
         e.preventDefault();
         try {
-            const result = await axios.post('http://127.0.0.1:5000/add-project-request', {
+            const result = await axios.post('http://127.0.0.1:5001/add-project-request', {
                 selected_segment,
                 requestor,
                 start_date,
@@ -525,14 +527,37 @@ function AddProjectRequestPage() {
 
 function ListProjectRequestPage() {
     const [data, setData] = useState([]);
+    const [response, setResponse] = useState('');
 
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/list-project-request').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-project-request').then((response) => {
             setData(response.data);
         });
     };
 
     useEffect(fetchData, []);
+
+    const handleDetails = (id) => {
+        axios.delete(`http://127.0.0.1:5001/list-project-request/${id}`).then(() => {
+            fetchData();
+        });
+    };
+
+    useEffect(fetchData, []);
+
+    const handleApproval = (id) => {
+        axios.get(`http://127.0.0.1:5001/approve-project-request/${id}`).then(() => {
+            fetchData();
+        });
+    };
+
+    useEffect(fetchData, []);
+
+    const handleBuild = (id) => {
+        axios.get(`http://127.0.0.1:5001/build-project-request/${id}`).then(() => {
+            fetchData();
+        });
+    };
 
     return (
         <Container>
@@ -544,13 +569,12 @@ function ListProjectRequestPage() {
                     <th>Segment</th>
                     <th>Requestor</th>
                     <th>Request Date</th>
+                    <th>Approver</th>
+                    <th>Approve Date</th>
                     <th>Start Date</th>
                     <th>End Date</th>
-                    <th>Producer SFTP Password</th>
-                    <th>Producer SFTP Password</th>
-                    <th>Producer MQ Host</th>
-                    <th>Producer MQ Port</th>
-                    <th>Producer MQ Flag</th>
+                    <th>Actions</th>
+
                 </tr>
                 </thead>
                 <tbody>
@@ -564,13 +588,18 @@ function ListProjectRequestPage() {
                         <td>{row[5]}</td>
                         <td>{row[6]}</td>
                         <td>{row[7]}</td>
-                        <td>{row[8]}</td>
-                        <td>{row[9]}</td>
-                        <td>{row[10]}</td>
+                        <td>
+                            <div class="col-1">
+                            <Button class="btn btn-outline-primary btn-sm m-1" variant="outline-primary" size="sm" onClick={() => handleDetails(row[0])}>Details</Button>
+                            <Button class="btn btn-outline-primary btn-sm m-1" variant="outline-primary" size="sm"  onClick={() => handleApproval(row[0])}>Approve</Button>
+                            <Button class="btn btn-outline-primary btn-sm m-1" variant="outline-primary" size="sm"  onClick={() => handleBuild(row[0])}>Build</Button>
+                            </div>
+                        </td>
                     </tr>
                 ))}
                 </tbody>
             </Table>
+            {response && <p className="mt-3">{response}</p>}
         </Container>
     );
 }
@@ -580,7 +609,7 @@ function DeleteProjectRequestPage() {
     const [data, setData] = useState([]);
 
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/list-project-request').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-project-request').then((response) => {
             setData(response.data);
         });
     };
@@ -588,7 +617,7 @@ function DeleteProjectRequestPage() {
     useEffect(fetchData, []);
 
     const handleDelete = (id) => {
-        axios.delete(`http://127.0.0.1:5000/delete-project-request/${id}`).then(() => {
+        axios.delete(`http://127.0.0.1:5001/delete-project-request/${id}`).then(() => {
             fetchData();
         });
     };
@@ -642,9 +671,8 @@ function DeleteProjectRequestPage() {
 function ApproveProjectRequestPage() {
     const [data, setData] = useState([]);
 
-
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/list-project-request').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-project-request').then((response) => {
             setData(response.data);
         });
     };
@@ -652,7 +680,7 @@ function ApproveProjectRequestPage() {
     useEffect(fetchData, []);
 
         const handleApproval = (id) => {
-        axios.get(`http://127.0.0.1:5000/approve-project-request/${id}`).then(() => {
+        axios.get(`http://127.0.0.1:5001/approve-project-request/${id}`).then(() => {
             fetchData();
         });
     };
@@ -703,13 +731,75 @@ function ApproveProjectRequestPage() {
 }
 
 
+function BuildProjectRequestPage() {
+    const [data, setData] = useState([]);
+
+    const fetchData = () => {
+        axios.get('http://127.0.0.1:5001/list-project-request').then((response) => {
+            setData(response.data);
+        });
+    };
+
+    useEffect(fetchData, []);
+
+        const handleBuild = (id) => {
+        axios.get(`http://127.0.0.1:5001/build-project-request/${id}`).then(() => {
+            fetchData();
+        });
+    };
+
+    return (
+        <Container>
+            <h1>Build Project Request</h1>
+            <Table striped bordered hover>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Segment</th>
+                    <th>Requestor</th>
+                    <th>Request Date</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Producer SFTP Password</th>
+                    <th>Producer SFTP Password</th>
+                    <th>Producer MQ Host</th>
+                    <th>Producer MQ Port</th>
+                    <th>Producer MQ Flag</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {data.map((row, idx) => (
+                    <tr key={idx}>
+                        <td>{row[0]}</td>
+                        <td>{row[1]}</td>
+                        <td>{row[2]}</td>
+                        <td>{row[3]}</td>
+                        <td>{row[4]}</td>
+                        <td>{row[5]}</td>
+                        <td>{row[6]}</td>
+                        <td>{row[7]}</td>
+                        <td>{row[8]}</td>
+                        <td>{row[9]}</td>
+                        <td>{row[10]}</td>
+                        <td>
+                            <Button variant="danger" onClick={() => handleBuild(row[0])}>Build</Button>
+                        </td>
+                    </tr>
+                ))}
+                </tbody>
+            </Table>
+        </Container>
+    );
+}
+
 function AddActiveProjectPage(project) {
     const [response, setResponse] = useState('');
 
     const handleAddProjectRequest = async (e) => {
         e.preventDefault();
         try {
-            const result = await axios.post('http://127.0.0.1:5000/add-active-project', {
+            const result = await axios.post('http://127.0.0.1:5001/add-active-project', {
                 project
             });
             setResponse(result.data.cn);
@@ -730,7 +820,7 @@ function ListActiveProjectsPage() {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:5000/list-active-project').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-active-project').then((response) => {
             setData(response.data);
         });
     }, []);
@@ -779,7 +869,7 @@ function DeleteActiveProjectPage() {
     const [data, setData] = useState([]);
 
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/list-active-project').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-active-project').then((response) => {
             setData(response.data);
         });
     };
@@ -787,7 +877,7 @@ function DeleteActiveProjectPage() {
     useEffect(fetchData, []);
 
     const handleDelete = (id) => {
-        axios.delete(`http://127.0.0.1:5000/delete-active-project/${id}`).then(() => {
+        axios.delete(`http://127.0.0.1:5001/delete-active-project/${id}`).then(() => {
             fetchData();
         });
     };
@@ -840,7 +930,7 @@ function ListArchiveProjectPage() {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:5000/list-archive-project').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-archive-project').then((response) => {
             setData(response.data);
         });
     }, []);
@@ -902,7 +992,7 @@ function AddSegmentPage() {
     const handleAddRequesterUser = async (e) => {
         e.preventDefault();
         try {
-            const result = await axios.post('http://127.0.0.1:5000/add-segment', {
+            const result = await axios.post('http://127.0.0.1:5001/add-segment', {
                 name,
                 inbound_sftp,
                 inbound_sftp_user,
@@ -975,7 +1065,7 @@ function ListSegmentPage() {
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:5000/list-segment').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-segment').then((response) => {
             setData(response.data);
         });
     }, []);
@@ -1025,7 +1115,7 @@ function DeleteSegmentPage() {
     const [data, setData] = useState([]);
 
     const fetchData = () => {
-        axios.get('http://127.0.0.1:5000/list-segment').then((response) => {
+        axios.get('http://127.0.0.1:5001/list-segment').then((response) => {
             setData(response.data);
         });
     };
@@ -1033,7 +1123,7 @@ function DeleteSegmentPage() {
     useEffect(fetchData, []);
 
     const handleDelete = (id) => {
-        axios.delete(`http://127.0.0.1:5000/delete-segment/${id}`).then(() => {
+        axios.delete(`http://127.0.0.1:5001/delete-segment/${id}`).then(() => {
             fetchData();
         });
     };

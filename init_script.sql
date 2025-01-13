@@ -5,20 +5,22 @@ VALUES
 
 INSERT INTO requestor_user (segment, name_first, name_last, phone, email, cn)
 VALUES
-    ('mqn', 'john', 'doe', '861-8756', 'doej@acme.com', 'CN=Doe, John'),
-    ('sftpa', 'john', 'doe', '861-8756', 'doej@acme.com', 'CN=Doe, Jim');
+    ('mqn', 'john', 'doe', '861-8756', 'doejo@acme.com', 'CN=Doe, John'),
+    ('sftpa', 'jim', 'doe', '861-8756', 'doeji@acme.com', 'CN=Doe, Jim');
 
 INSERT INTO admin_user (name_first, name_last, phone, email, cn)
-VALUES ('jane', 'doe', '861-9999', 'doej2@acme.com', 'CN=Doe, Jane');
+VALUES
+    ('jane', 'doe', '861-9999', 'doej2@acme.com', 'CN=Doe, Jane');
 
 INSERT INTO project_used (project, used)
-  VALUES ('alpha', False),
-   ('bravo', False),
-   ('charlie', False),
-   ('delta', False),
-   ('echo', False),
-   ('foxtrot', False),
-   ('golf', False),
+  VALUES
+   ('alpha', True),
+   ('bravo', True),
+   ('charlie', True),
+   ('delta', True),
+   ('echo', True),
+   ('foxtrot', True),
+   ('golf', True),
    ('hotel', False),
    ('india', False),
    ('juliet', False),

@@ -21,9 +21,10 @@ CREATE TABLE IF NOT EXISTS "active_project" (
 	"approver" varchar(40) NOT NULL,
 	"request_date" date NOT NULL,
 	"approved_date" date NOT NULL,
+    "build_date" date NOT NULL,
+    "deployed_date" date NOT NULL,
 	"start_date" date NOT NULL,
 	"end_date" date NOT NULL,
-	"deployed" boolean NOT NULL,
 	PRIMARY KEY ("id")
 );
 
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS "requested_project" (
 	"request_date" date NOT NULL,
     "approver" varchar(40),
     "approved_date" date,
+    "build_date" date,
 	"start_date" date NOT NULL,
 	"end_date" date NOT NULL,
 	"mq1_host" varchar(40),
@@ -77,6 +79,8 @@ CREATE TABLE IF NOT EXISTS "archive_project" (
 	"request_date" date NOT NULL,
 	"approver" varchar(40) NOT NULL,
 	"approve_date" date NOT NULL,
+    "build_date" date NOT NULL,
+    "deployed_date" date NOT NULL,
 	"start_date" date NOT NULL,
 	"end_date" date NOT NULL,
 	"delete_date" date NOT NULL,

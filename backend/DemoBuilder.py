@@ -2,6 +2,7 @@ import os
 import git
 import glob
 import subprocess
+import  kubernetes
 import json
 import logging
 from flask import Flask, request, jsonify
@@ -10,6 +11,7 @@ from datetime import datetime, date
 from BuildProject import build_project, run_command, update_branch_counter, execute_bash_script
 
 from db_config import get_db_connection
+from jinja2.lexer import TOKEN_DOT
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -315,10 +317,22 @@ def deploy_project(id):
 
 
 def destroy_project(id):
-
     logging.debug("destroying active project")
-    
-    
+    # get project name from active projects
+    project_name = get_active_project_name(id)
+    # delete namespaces from cluster and terraform state from s3
+    components = ["artemis", "kafka", "zookeeper", "ms", "mq"]
+    # delete namespaces
+    for component in components:
+        try:
+            v1 = client.CoreV1Api()
+            namespace = project_name[0] + component
+            v1.delete_namespaced_project(namespace)
+        except Exception as e:
+            return jsonify({"error deleting project namespace": str(e)}), 500
+    # delete bucket state
+    # TODO: bucket cleanup
+
 ##############################################################################
 ##############################################################################
 
@@ -538,6 +552,16 @@ def list_archive_project():
         return jsonify({"error": str(e)}), 500
 
 #################################################################################
+
+def get_active_project_name(id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT project FROM active_project WHERE id = %s", id)
+                project = cur.fetchone() # returns tuple
+        return project[0]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Helper - Find First Unused Project
